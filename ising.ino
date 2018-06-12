@@ -11,12 +11,15 @@ int sensorValue = 0;
 
 bool mainLoop = false;
 
+//dimensions of led matrix.
 const int xLength = 8;
 const int yLength = 8;
 //current configuration of Ising model. 
 int config[xLength][yLength];
+//default temperature of model.
 float temperature = 2.3;
 
+//Generates a random initial state
 void GenerateInitialConfiguration()
 {
     for(int i=0; i < xLength; i++)
@@ -40,6 +43,7 @@ void setup()
     GenerateInitialConfiguration();
 }
 
+//Update the LED matrix based on the Ising model.
 void UpdateLEDMatrix()
 {
     ledMatrix.clear();
@@ -47,6 +51,7 @@ void UpdateLEDMatrix()
     {
         for(int y =0; y < yLength; y++)
         {
+            //If up, then color yellow, otherwise color red. Green is also an option!
             if(config[x][y] == 1) 
                 ledMatrix.drawPixel(x,y, LED_YELLOW);
             else if(config[x][y] == -1)
@@ -57,6 +62,7 @@ void UpdateLEDMatrix()
     ledMatrix.writeDisplay();
 }
 
+//Perform the monte carlo update of the simulation.
 void MonteCarloMove(float beta)
 {
     for(int i=0; i < xLength; i++)
@@ -81,6 +87,7 @@ void MonteCarloMove(float beta)
     }
 }
 
+//Filter the photoresistor sensor input. 
 float filter(int sensorValue)
 {
     float minValue = 60.0;
@@ -91,10 +98,12 @@ float filter(int sensorValue)
     return (scaling * val / (maxValue - minValue)) + bump;
 }
 
+//Main loop
 void loop()
 {
     sensorValue = analogRead(sensorPin);
 
+    //Displays some introductory text.
     if (!mainLoop)
     {
         ledMatrix.setTextWrap(false);
@@ -112,10 +121,13 @@ void loop()
 
     }
 
+    //Update the temperature based on sensor.
     float temp = temperature * filter(sensorValue);
     Serial.println(sensorValue);
+    //Perform monte carlo move.
     MonteCarloMove(1.0/temp);
     UpdateLEDMatrix();
+    //Chill out for a few ms. 
     delay(50);
 
 }
